@@ -33,12 +33,11 @@ def build():
     git_clone_dir = Path(GIT_CLONE_DIR)
     build_dir = Path(BUILD_DIR)
 
-    git_clone_abspath = git_clone_dir.abspath()
     build_abspath = build_dir.abspath()
 
     if not git_clone_dir.exists():
-        os.chdir(git_clone_dir)
         run(f"git clone https://github.com/FFmpeg/FFmpeg.git {GIT_CLONE_DIR}")
+        os.chdir(git_clone_dir)
     else:
         os.chdir(git_clone_dir)
         run(f"git pull")

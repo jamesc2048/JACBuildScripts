@@ -29,6 +29,8 @@ def download(url, filename):
     except:
         raise
 
+def rmtree(d):
+    shutil.rmtree(d, ignore_errors=True)
 
 def main():
     if not Path("opencv-4.5.0.zip").exists():
@@ -37,7 +39,7 @@ def main():
     if not Path("opencv_contrib-4.5.0.zip").exists():
         download("https://github.com/opencv/opencv_contrib/archive/4.5.0.zip", "opencv_contrib-4.5.0.zip")
 
-    shutil.rmtree("buildtrees", ignore_errors=True)
+    rmtree("buildtrees")
     
     print("Unzip")
 
@@ -79,8 +81,11 @@ def main():
     print("Done")
 
     [l.close() for l in logs]
+    
     #shutil.move("build-4.5-simple/")
     #shutil.move("build-4.5-simple-static/")
+
+    #rmtree("buildtrees")
 
 if __name__ == "__main__":
     main()
