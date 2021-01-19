@@ -62,13 +62,20 @@ def build():
     make -j16
     '''
 
-    configure_options = ["--disable-lzma",
-                        "--disable-sdl2",
+    configure_options = [
+                        "--target-os=win64",
+                        "--arch=x86_64", 
+                        "--toolchain=msvc",
+                        "--disable-zlib",
+                        "--disable-iconv",
+                        "--enable-nonfree",
+                        "--enable-gpl",
+                        "--enable-version3",
                         "--prefix=install" ]
 
     # TODO command line opt
-    shared_build = True
-    license="lgpl2.1"
+    shared_build = False
+    license = "gpl3"
 
     if shared_build:
         build_type = "shared"
@@ -82,7 +89,7 @@ def build():
 
     build_script = (
         f"../{git_clone_dir}/configure " + " ".join(configure_options) + " | tee configureLog.txt",
-        f"make -j{NUM_CORES}" + " | tee makeLog.txt", 
+        "make" + " | tee makeLog.txt", 
         "make install" + " | tee installLog.txt", 
         "cp *Log.txt install",
         f"mv install {build_name}",
@@ -90,15 +97,20 @@ def build():
         f"mv {build_name}.zip ..",
     )
 
-    def run_in_msys(cmd, working_dir=None, hide_window=True):
-        # -w hide to hide window
+    def run_in_msys(cmd, tools, working_dir=None, hide_window=False):
         if working_dir:
             cmd = rf"""cd '{working_dir}'; """ + cmd
 
-        return run(rf"""C:\msys64\msys2_shell.cmd -mingw64 -c "set -xe; {cmd}" """)
+        # hide_window_opt = "-w hide" if hide_window else ""
+        # TODO: use this to hide window C:\msys64\usr\bin\mintty.exe -w hide /bin/env MSYSTEM=MINGW64 /bin/bash -lc /c/path/to/your_program.exe
 
-    for bs in build_script:
-        run_in_msys(bs, working_dir=build_abspath)
+        mingw_opt = "-mingw64" if tools == "mingw" else ""
+        vs_tools_opt = r""""C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64 && """ if tools == "vs2019" else ""
+        vs_path_opt = "-use-full-path" if len(vs_tools_opt) > 0 else ""
+
+        return run(rf"""{vs_tools_opt} C:\msys64\msys2_shell.cmd {vs_path_opt} {mingw_opt} -c "set -xe; {cmd};" """)
+
+    run_in_msys("; ".join(build_script), tools="vs2019", working_dir=build_abspath, hide_window=True)
 
     os.chdir(original_dir)
 
