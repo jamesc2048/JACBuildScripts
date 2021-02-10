@@ -7,6 +7,8 @@ Git in path
 """
 
 from buildX264 import X264Builder
+from buildX265 import X265Builder
+from buildSVTAV1 import SVTAV1Builder
 from buildFFmpeg import FFmpegBuilder
 
 from path import Path
@@ -19,6 +21,8 @@ base_dir = Path(__file__).dirname()
 for linkage in ("static", ):
     deps = [
         X264Builder(linkage=linkage),
+        X265Builder(linkage=linkage),
+        SVTAV1Builder(linkage=linkage),
     ]
 
     for dep in deps:

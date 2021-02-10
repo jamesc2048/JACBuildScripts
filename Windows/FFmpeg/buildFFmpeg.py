@@ -24,6 +24,8 @@ class FFmpegBuilder(BuilderBase):
                             "--extra-libs=/mingw64/x86_64-w64-mingw32/lib/libwinpthread.a",
                             "--prefix=install",
                             "--enable-libx264",
+                            "--enable-libx265",
+                            "--enable-libsvtav1",
                             ]
 
         license = "gpl3"
@@ -46,9 +48,9 @@ class FFmpegBuilder(BuilderBase):
         configure_options.append(f"--extra-version={build_name}")
 
         build_script = (
-            f"../{self.git_clone_path}/configure {' '.join(configure_options)} | tee configureLog.txt",
-            f"make -j{self.NUM_CORES} | tee makeLog.txt", 
-            "make install" + " | tee installLog.txt", 
+            f"../{self.git_clone_path}/configure {' '.join(configure_options)} 2>&1 | tee configureLog.txt",
+            f"make -j{self.NUM_CORES} 2>&1 | tee makeLog.txt", 
+            "make install 2>&1 | tee installLog.txt", 
             "cp *Log.txt install",
             f"mv install {build_name}",
             f"zip -r {build_name}.zip {build_name}",
