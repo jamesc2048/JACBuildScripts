@@ -15,7 +15,7 @@ class X265Builder(BuilderBase):
 
         configure_options = [ "-DCMAKE_INSTALL_PREFIX=/mingw64",
                             "-DENABLE_ASSEMBLY=yes",
-                            # This is 
+                            # The static libstdc++ gets added by FFmpeg build explicitly.
                             "-DSTATIC_LINK_CRT=no" ]
 
         linkage = self.linkage.lower()
