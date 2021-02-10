@@ -20,9 +20,9 @@ base_dir = Path(__file__).dirname()
 
 for linkage in ("static", ):
     deps = [
-        X264Builder(linkage=linkage),
-        X265Builder(linkage=linkage),
-        SVTAV1Builder(linkage=linkage),
+        X264Builder(),
+        X265Builder(),
+        SVTAV1Builder(),
     ]
 
     for dep in deps:

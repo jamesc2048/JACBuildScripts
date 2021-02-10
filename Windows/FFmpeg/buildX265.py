@@ -3,7 +3,7 @@ from path import Path
 import os
 
 class X265Builder(BuilderBase):
-    def __init__(self, linkage):
+    def __init__(self, linkage="static"):
         super().__init__("x265", "https://bitbucket.org/multicoreware/x265_git.git", linkage)
 
     def build(self):
@@ -13,15 +13,20 @@ class X265Builder(BuilderBase):
         self.build_path.mkdir_p()
         self.build_path.chdir()
 
-        configure_options = [ "-DCMAKE_INSTALL_PREFIX=/mingw64" ]
+        configure_options = [ "-DCMAKE_INSTALL_PREFIX=/mingw64",
+                            "-DENABLE_ASSEMBLY=yes",
+                            # This is 
+                            "-DSTATIC_LINK_CRT=no" ]
 
         linkage = self.linkage.lower()
 
         if linkage == "shared":
             build_type = "shared"
+            configure_options.append("-DENABLE_SHARED=yes")
             configure_options.append("-DBUILD_SHARED_LIBS=yes")
         elif linkage == "static":
             build_type = "static"
+            configure_options.append("-DENABLE_SHARED=no")
             configure_options.append("-DBUILD_SHARED_LIBS=no")
         else:
             raise Exception(f"invalid linkage type {self.linkage}")
@@ -37,4 +42,4 @@ class X265Builder(BuilderBase):
         self.run_in_msys(build_script, working_dir=self.build_abspath, hide_window=True)
 
 if __name__ == "__main__":
-    X265Builder(linkage="static").build()
+    X265Builder().build()

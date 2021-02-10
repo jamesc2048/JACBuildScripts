@@ -3,7 +3,7 @@ from path import Path
 import os
 
 class SVTAV1Builder(BuilderBase):
-    def __init__(self, linkage):
+    def __init__(self, linkage="static"):
         super().__init__("svtav1", "https://github.com/AOMediaCodec/SVT-AV1", linkage)
 
     def build(self):
@@ -37,4 +37,4 @@ class SVTAV1Builder(BuilderBase):
         self.run_in_msys(build_script, working_dir=self.build_abspath, hide_window=True)
 
 if __name__ == "__main__":
-    SVTAV1Builder(linkage="static").build()
+    SVTAV1Builder().build()
