@@ -7,7 +7,7 @@ Libraries:
 - libx264 git
 - libx265 git
 - libsvt-av1 git
-- libSDL2
+- libSDL2 git
 
 You're expected to run this in a VM as the script installs the libs inside the MSYS environment.
 
