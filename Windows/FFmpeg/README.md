@@ -18,7 +18,7 @@ Requires:
 -- pacman -Syu && pacman -S base-devel mingw-w64-x86_64-toolchain
 
 Plans:
-[_] More libs
-[ ] Daily build server
-[ ] Linux build
-[ ] Local MSYS so it doesn't install into global MSYS
+- [ ] More libs
+- [ ] Daily build server
+- [ ] Linux build
+- [ ] Local MSYS so it doesn't install into global MSYS
