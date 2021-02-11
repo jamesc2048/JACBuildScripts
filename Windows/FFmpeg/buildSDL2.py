@@ -1,0 +1,44 @@
+from build_base import BuilderBase
+from path import Path
+import os
+
+class SDL2Builder(BuilderBase):
+    def __init__(self, linkage="static"):
+        super().__init__("sdl2", "https://github.com/spurious/SDL-mirror.git", linkage)
+
+    def build(self):
+        self.update_sources()
+
+        self.build_path.rmtree(ignore_errors=True)
+        self.build_path.mkdir_p()
+        self.build_path.chdir()
+
+        configure_options = [ 
+            "--prefix=/mingw64",
+        ]
+
+        linkage = self.linkage.lower()
+
+        if linkage == "shared":
+            build_type = "shared"
+            configure_options.append("--enable-static=no")
+            configure_options.append("--enable-shared=yes")
+        elif linkage == "static":
+            build_type = "static"
+            configure_options.append("--enable-static=yes")
+            configure_options.append("--enable-shared=no")
+        else:
+            raise Exception(f"invalid linkage type {self.linkage}")
+
+        build_script = (
+            f"../{self.git_clone_path}/configure {' '.join(configure_options)} 2>&1 | tee configureLog.txt",
+            f"make -j{self.NUM_CORES} 2>&1 | tee makeLog.txt", 
+            "make install 2>&1 | tee installLog.txt", 
+        )
+
+        print(build_script)
+
+        self.run_in_msys(build_script, working_dir=self.build_abspath, hide_window=True)
+
+if __name__ == "__main__":
+    SDL2Builder().build()

@@ -28,6 +28,8 @@ class FFmpegBuilder(BuilderBase):
                             "--enable-libx264",
                             "--enable-libx265",
                             "--enable-libsvtav1",
+                            "--enable-sdl2",
+                            "--enable-opengl"
                             ]
 
         license = "gpl3"
