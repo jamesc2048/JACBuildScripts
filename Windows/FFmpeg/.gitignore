@@ -1,2 +1,3 @@
-build-ffmpeg-git
-ffmpeg-git
+*-git
+Windows/FFmpeg/tools
+build-*
