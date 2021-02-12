@@ -88,10 +88,10 @@ class BuilderBase:
                 print(str(e))
                 raise
                 
-        print("Updating MSYS")
-        self.run_in_msys("pacman -Sy --noconfirm", fetch_msys=False)
+        #print("Updating MSYS")
+        #self.run_in_msys("pacman -Sy --noconfirm", fetch_msys=False)
         print("Installing compiler")
-        self.run_in_msys("pacman -S --noconfirm --needed base-devel mingw-w64-x86_64-toolchain", fetch_msys=False)
+        self.run_in_msys("pacman -S --noconfirm --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm", fetch_msys=False)
 
     def update_sources(self):
         self.fetch_git()
@@ -101,7 +101,8 @@ class BuilderBase:
             os.chdir(self.git_clone_path)
         else:
             os.chdir(self.git_clone_path)
-            self.run(f"{self.git_exe_path} pull")
+            # TODO!?
+            #self.run(f"{self.git_exe_path} pull --ff-only")
 
         self.run(f"{self.git_exe_path} status")
 
