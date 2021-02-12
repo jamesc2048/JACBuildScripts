@@ -59,7 +59,7 @@ class BuilderBase:
             print("Updating MSYS")
             self.run_in_msys("pacman -Sy --noconfirm", fetch_msys=False)
             print("Installing compiler")
-            self.run_in_msys("pacman -S --noconfirm --needed base-devel " +
+            self.run_in_msys("pacman -S --noconfirm --needed zip unzip base-devel " +
                             "mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake " +
                             "mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm", fetch_msys=False)
 
@@ -72,14 +72,14 @@ class BuilderBase:
             os.chdir(self.git_clone_path)
         else:
             os.chdir(self.git_clone_path)
-            repo = pygit2.Repository(self.git_clone_path)
-            self.pull(repo)
+            #repo = pygit2.Repository(self.git_clone_path.abspath())
+            #self.pull(repo)
 
         try:
             self.version = repo.describe()
             print(self.version)
         except Exception as e:
-            print("Can't get tag version")
+            print("Can't get tag version", str(e))
             self.version = None
 
         os.chdir("..")
@@ -101,6 +101,7 @@ class BuilderBase:
         time.sleep(1)
 
         return out
+
 
     def run_in_msys(self, cmd, working_dir=None, hide_window=False, fetch_msys=True):
         if fetch_msys:
