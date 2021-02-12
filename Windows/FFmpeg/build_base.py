@@ -11,13 +11,13 @@ class BuilderBase:
     def __init__(self, name, git_address, linkage):
         self.name = name
         self.git_address = git_address
+        self.linkage = linkage
 
         self.git_clone_path = Path(f"{self.name}-git")
-        self.build_path = Path(f"build-{self.name}-git")
+        self.build_path = Path(f"build-{self.name}-{self.linkage}-git")
         
         self.build_abspath = self.build_path.abspath()
 
-        self.linkage = linkage
 
     def update_sources(self):
         if not self.git_clone_path.exists():

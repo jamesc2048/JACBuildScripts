@@ -19,15 +19,22 @@ class FFmpegBuilder(BuilderBase):
                             "--enable-gpl",
                             "--enable-version3",
                             "--enable-w32threads",
-                            "--extra-libs=/mingw64/x86_64-w64-mingw32/lib/libwinpthread.a",
-                            # for LibX265 static
-                            "--extra-libs=/mingw64/lib/gcc/x86_64-w64-mingw32/10.2.0/libstdc++.a",
                             "--prefix=install",
+                            "--enable-lto",
+                            # Libs
                             "--enable-libx264",
                             "--enable-libx265",
                             "--enable-libsvtav1",
                             "--enable-sdl2",
-                            "--enable-opengl"
+                            "--enable-opengl",
+                            "--enable-dxva2",
+                            "--enable-d3d11va",
+                            # for correct static link of libraries
+                            "--extra-cflags=\"\"-static-libgcc -static-libstdc++\"\"", 
+                            "--extra-cxxflags=\"\"-static-libgcc -static-libstdc++\"\"", 
+                            "--extra-ldflags=\"\"-static-libgcc -static-libstdc++\"\"", 
+                            "--extra-libs=/mingw64/x86_64-w64-mingw32/lib/libwinpthread.a",
+                            "--extra-libs=/mingw64/lib/gcc/x86_64-w64-mingw32/10.2.0/libstdc++.a",
                             ]
 
         license = "gpl3"
@@ -36,12 +43,10 @@ class FFmpegBuilder(BuilderBase):
 
         if linkage == "shared":
             build_type = "shared"
-            configure_options.append("--enable-shared")
-            configure_options.append("--disable-static")
+            configure_options += [ "--enable-shared", "--disable-static" ]
         elif linkage == "static":
             build_type = "static"
-            configure_options.append("--enable-static")
-            configure_options.append("--disable-shared")
+            configure_options += [ "--disable-shared", "--enable-static" ]
         else:
             raise Exception(f"invalid linkage type {self.linkage}")
 
@@ -61,4 +66,4 @@ class FFmpegBuilder(BuilderBase):
         self.run_in_msys(build_script, working_dir=self.build_abspath, hide_window=True)
 
 if __name__ == "__main__":
-    FFmpegBuilder(linkage="static").build()
+    FFmpegBuilder(linkage="shared").build()

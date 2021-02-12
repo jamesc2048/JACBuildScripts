@@ -20,20 +20,21 @@ for build_dir in (d for d in base_dir.dirs() if d.basename().startswith("build-"
     print("Delete build dir", build_dir)
     build_dir.rmtree()
 
-for linkage in ("static", ):
-    deps = [
+deps = [
         X264Builder(),
         X265Builder(),
         SVTAV1Builder(),
         SDL2Builder(),
     ]
 
-    for dep in deps:
-        print("Building dep", dep.name)
-        
-        dep.build()
-        base_dir.chdir()
+for dep in deps:
+    print("Building dep", dep.name)
+    
+    dep.build()
+    base_dir.chdir()
 
+for linkage in ("static", "shared"):
     print("Building final FFmpeg", linkage)
     ffmpeg_builder = FFmpegBuilder(linkage=linkage)
     ffmpeg_builder.build()
+    base_dir.chdir()
