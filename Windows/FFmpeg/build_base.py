@@ -7,6 +7,7 @@ import os
 import requests
 import zipfile
 import os
+import pygit2
 
 class BuilderBase:
     NUM_CORES = multiprocessing.cpu_count()
@@ -22,40 +23,7 @@ class BuilderBase:
         self.build_path = Path(f"build-{self.name}-{self.linkage}-git")
         
         self.build_abspath = self.build_path.abspath()
-        self.git_path = self.base_path / "tools/git"
-        self.git_exe_path = (self.git_path / "bin/git.exe").abspath()
-
         self.msys_path = self.base_path / Path("tools/msys64")
-
-    def fetch_git(self):
-        if not self.git_exe_path.exists():
-            print("Fetching PortableGit archive")
-
-            try:
-                self.git_path.makedirs_p()
-                # TODO put on github files?
-                r = requests.get("https://crisafulli.me/public/JACBuildScripts/git_portable_2.30.1.zip", stream=True)
-                
-                git_zip_path = self.git_path / "git_portable_2.30.1.zip"
-                total = 0
-
-                with open(git_zip_path, "wb") as f:
-                    for c in r.iter_content(chunk_size=64 * 1024):
-                        print(f"Downloaded {total / 1024. / 1024.:.2f} MB / {int(r.headers['Content-Length']) / 1024. / 1024.:.2f} MB", end="\r")
-                        f.write(c)
-                        total += len(c)
-
-                print()
-
-                with zipfile.ZipFile(git_zip_path) as zf:
-                    print("Extracting Git")
-                    zf.extractall(self.git_path)
-                
-                os.remove(git_zip_path)
-
-            except Exception as e:
-                print(str(e))
-                raise
 
 
     def fetch_msys(self):
@@ -88,26 +56,27 @@ class BuilderBase:
                 print(str(e))
                 raise
                 
-        #print("Updating MSYS")
-        #self.run_in_msys("pacman -Sy --noconfirm", fetch_msys=False)
-        print("Installing compiler")
-        self.run_in_msys("pacman -S --noconfirm --needed base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm", fetch_msys=False)
+            print("Updating MSYS")
+            self.run_in_msys("pacman -Sy --noconfirm", fetch_msys=False)
+            print("Installing compiler")
+            self.run_in_msys("pacman -S --noconfirm --needed base-devel " +
+                            "mingw-w64-x86_64-toolchain mingw-w64-x86_64-cmake " +
+                            "mingw-w64-x86_64-nasm mingw-w64-x86_64-yasm", fetch_msys=False)
 
     def update_sources(self):
-        self.fetch_git()
+        self.fetch_msys()
 
         if not self.git_clone_path.exists():
-            self.run(f"{self.git_exe_path} clone {self.git_address} {self.git_clone_path}")
+            print("Cloning repo")
+            repo = pygit2.clone_repository(self.git_address, self.git_clone_path)
             os.chdir(self.git_clone_path)
         else:
             os.chdir(self.git_clone_path)
-            # TODO!?
-            #self.run(f"{self.git_exe_path} pull --ff-only")
-
-        self.run(f"{self.git_exe_path} status")
+            repo = pygit2.Repository(self.git_clone_path)
+            self.pull(repo)
 
         try:
-            self.version = self.run(f"{self.git_exe_path} describe --tags")
+            self.version = repo.describe()
             print(self.version)
         except Exception as e:
             print("Can't get tag version")
@@ -139,9 +108,6 @@ class BuilderBase:
 
         if isinstance(cmd, (list, tuple)):
             cmd ="; ".join(cmd)
-
-        if not (self.msys_path / "msys2_shell.cmd").exists():
-            raise Exception("Need msys2 install in default path C:\\msys64\\")
         
         if working_dir:
             cmd = rf"""cd '{working_dir}'; """ + cmd
@@ -150,3 +116,43 @@ class BuilderBase:
         # TODO: use this to hide window C:\msys64\usr\bin\mintty.exe -w hide /bin/env MSYSTEM=MINGW64 /bin/bash -lc /c/path/to/your_program.exe
 
         return self.run(rf"""{self.msys_path}\msys2_shell.cmd -mingw64 -c "set -xe; {cmd};" """)
+
+    @staticmethod
+    def pull(repo, remote_name='origin', branch='master'):
+        for remote in repo.remotes:
+            if remote.name == remote_name:
+                remote.fetch()
+                remote_master_id = repo.lookup_reference('refs/remotes/origin/%s' % (branch)).target
+                merge_result, _ = repo.merge_analysis(remote_master_id)
+                # Up to date, do nothing
+                if merge_result & pygit2.GIT_MERGE_ANALYSIS_UP_TO_DATE:
+                    return
+                # We can just fastforward
+                elif merge_result & pygit2.GIT_MERGE_ANALYSIS_FASTFORWARD:
+                    repo.checkout_tree(repo.get(remote_master_id))
+                    try:
+                        master_ref = repo.lookup_reference('refs/heads/%s' % (branch))
+                        master_ref.set_target(remote_master_id)
+                    except KeyError:
+                        repo.create_branch(branch, repo.get(remote_master_id))
+                    repo.head.set_target(remote_master_id)
+                elif merge_result & pygit2.GIT_MERGE_ANALYSIS_NORMAL:
+                    repo.merge(remote_master_id)
+
+                    if repo.index.conflicts is not None:
+                        for conflict in repo.index.conflicts:
+                            print('Conflicts found in:', conflict[0].path)
+                        raise AssertionError('Conflicts, ahhhhh!!')
+
+                    user = repo.default_signature
+                    tree = repo.index.write_tree()
+                    commit = repo.create_commit('HEAD',
+                                                user,
+                                                user,
+                                                'Merge!',
+                                                tree,
+                                                [repo.head.target, remote_master_id])
+                    # We need to do this or git CLI will think we are still merging.
+                    repo.state_cleanup()
+                else:
+                    raise AssertionError('Unknown merge analysis result')
