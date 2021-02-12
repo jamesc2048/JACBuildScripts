@@ -90,7 +90,7 @@ class BuilderBase:
     def run(self, cmd, print_output=True):
         if print_output: print("Cmd: " + cmd)
 
-        out = sp.check_output(cmd, shell=True).decode("utf-8")
+        out = sp.check_output(cmd.replace("\\", "/"), shell=True, creationflags=sp.IDLE_PRIORITY_CLASS).decode("utf-8")
         if print_output: print(out)
         
         # trim pesky newline
