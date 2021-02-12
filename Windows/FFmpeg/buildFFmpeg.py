@@ -10,9 +10,7 @@ class FFmpegBuilder(BuilderBase):
 
     def build(self):
         self.update_sources()
-
-        self.build_path.rmtree(ignore_errors=True)
-        self.build_path.mkdir_p()
+        self.build_path.mkdir()
         self.build_path.chdir()
 
         configure_options = [
