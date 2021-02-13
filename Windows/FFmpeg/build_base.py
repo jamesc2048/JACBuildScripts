@@ -69,11 +69,11 @@ class BuilderBase:
         if not self.git_clone_path.exists():
             print("Cloning repo")
             repo = pygit2.clone_repository(self.git_address, self.git_clone_path)
-            os.chdir(self.git_clone_path)
+            self.git_clone_path.chdir()
         else:
-            os.chdir(self.git_clone_path)
-            #repo = pygit2.Repository(self.git_clone_path.abspath())
-            #self.pull(repo)
+            self.git_clone_path.chdir()
+            repo = pygit2.Repository(".")
+            self.pull(repo)
 
         try:
             self.version = repo.describe()
