@@ -79,8 +79,11 @@ class BuilderBase:
             self.version = repo.describe()
             print(self.version)
         except Exception as e:
-            print("Can't get tag version", str(e))
-            self.version = None
+            try:
+                self.version = list(repo.head.log())[0].oid_new
+            except Exception as e:
+                print("Can't get tag version", str(e))
+                self.version = None
 
         os.chdir("..")
 
